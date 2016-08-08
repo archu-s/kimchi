@@ -20,6 +20,7 @@
 import copy
 import ipaddr
 import libvirt
+import sys
 import time
 from libvirt import VIR_INTERFACE_XML_INACTIVE
 
@@ -55,22 +56,24 @@ class NetworksModel(object):
         self.caps = CapabilitiesModel(**kargs)
 
     def _check_default_networks(self):
+        if 'networks' not in tmpl_defaults:
+		return
         networks = list(set(tmpl_defaults['networks']))
         conn = self.conn.get()
 
-        for net_name in networks:
-            error_msg = ("Network %s does not exist or is not "
-                         "active. Please, check the configuration in "
-                         "%s/template.conf to ensure it lists only valid "
-                         "networks." % (net_name, kimchiPaths.sysconf_dir))
+        error_msg = ("Please, check the configuration in %s/template.conf to "
+                     "ensure it lists only valid networks." %
+                     kimchiPaths.sysconf_dir)
 
+        for net_name in networks:
             try:
                 net = conn.networkLookupByName(net_name)
             except libvirt.libvirtError, e:
                 msg = "Fatal: Unable to find network %s."
                 wok_log.error(msg, net_name)
+                wok_log.error(error_msg)
                 wok_log.error("Details: %s", e.message)
-                raise Exception(error_msg)
+                sys.exit(1)
 
             if net.isActive() == 0:
                 try:
@@ -78,8 +81,9 @@ class NetworksModel(object):
                 except libvirt.libvirtError as e:
                     msg = "Fatal: Unable to activate network %s."
                     wok_log.error(msg, net_name)
+                    wok_log.error(error_msg)
                     wok_log.error("Details: %s", e.message)
-                    raise Exception(error_msg)
+                    sys.exit(1)
 
     def create(self, params):
         conn = self.conn.get()
@@ -348,6 +352,8 @@ class NetworkModel(object):
         self.collection = NetworksModel(**kargs)
 
     def lookup(self, name):
+#        import pdb
+ #       pdb.set_trace()
         network = self.get_network(self.conn.get(), name)
         xml = network.XMLDesc(0)
         net_dict = self.get_network_from_xml(xml)
