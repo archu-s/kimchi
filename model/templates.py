@@ -97,14 +97,14 @@ class TemplatesModel(object):
 
             # check search permission
             st_mode = os.stat(path).st_mode
-            #if stat.S_ISREG(st_mode) or stat.S_ISBLK(st_mode):
-                #user = UserTests().probe_user()
-                #run_setfacl_set_attr(path, user=user)
-                #ret, excp = probe_file_permission_as_user(path, user)
-                #if ret is False:
-                 #   raise InvalidParameter('KCHISO0008E',
-                  #                         {'filename': path, 'user': user,
-                   #                         'err': excp})
+            if stat.S_ISREG(st_mode) or stat.S_ISBLK(st_mode):
+                user = UserTests().probe_user()
+                run_setfacl_set_attr(path, user=user)
+                ret, excp = probe_file_permission_as_user(path, user)
+                if ret is False:
+                    raise InvalidParameter('KCHISO0008E',
+                                           {'filename': path, 'user': user,
+                                            'err': excp})
         # disk
         else:
             params["disks"] = params.get('disks', [])
