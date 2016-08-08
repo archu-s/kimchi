@@ -17,7 +17,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 
-import guestfs
+# import guestfs
 import json
 import os
 import sys
@@ -47,26 +47,27 @@ def probe_image(image_path):
 
     if not os.access(image_path, os.R_OK):
         raise ImageFormatError("KCHIMG0003E", {'filename': image_path})
+    return ("unknown", "unknown")
 
-    g = guestfs.GuestFS(python_return_dict=True)
-    g.add_drive_opts(image_path, readonly=1)
-    g.launch()
-    try:
-        roots = g.inspect_os()
-    except:
-        raise ImageFormatError("KCHIMG0001E")
+    #g = guestfs.GuestFS(python_return_dict=True)
+    #g.add_drive_opts(image_path, readonly=1)
+    #g.launch()
+    #try:
+    #    roots = g.inspect_os()
+    #except:
+    #    raise ImageFormatError("KCHIMG0001E")
 
-    if len(roots) == 0:
+    #if len(roots) == 0:
         # If we are unable to detect the OS, still add the image
         # but make distro and vendor 'unknown'
-        return ("unknown", "unknown")
+    #    return ("unknown", "unknown")
 
-    for root in roots:
-        version = "%d.%d" % (g.inspect_get_major_version(root),
-                             g.inspect_get_minor_version(root))
-        distro = "%s" % (g.inspect_get_distro(root))
+    #for root in roots:
+    #    version = "%d.%d" % (g.inspect_get_major_version(root),
+    #                         g.inspect_get_minor_version(root))
+    #    distro = "%s" % (g.inspect_get_distro(root))
 
-    return (distro, version)
+    #return (distro, version)
 
 
 if __name__ == '__main__':

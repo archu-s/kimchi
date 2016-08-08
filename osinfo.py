@@ -31,7 +31,8 @@ from wok.plugins.kimchi.config import kimchiPaths
 
 SUPPORTED_ARCHS = {'x86': ('i386', 'i686', 'x86_64'),
                    'power': ('ppc', 'ppc64'),
-                   'ppc64le': ('ppc64le')}
+                   'ppc64le': ('ppc64le'),
+                   's390x': ('s390x')}
 
 
 # Memory devices slot limits by architecture
@@ -39,7 +40,8 @@ MEM_DEV_SLOTS = {'ppc64': 256,
                  'ppc64le': 256,
                  'x86_64': 256,
                  'i686': 256,
-                 'i386': 256}
+                 'i386': 256,
+                 's390x': 256}
 
 
 template_specs = {'x86': {'old': dict(disk_bus='ide',
@@ -71,7 +73,11 @@ template_specs = {'x86': {'old': dict(disk_bus='ide',
                                              kbd_bus='usb',
                                              kbd_type="keyboard",
                                              mouse_bus='usb',
-                                             tablet_bus='usb')}}
+                                             tablet_bus='usb')},
+                  's390x': {'old': dict(disk_bus='virtio',
+                                        nic_model='virtio', cdrom_bus='scsi'),
+                          'modern': dict(disk_bus='virtio',
+                                         nic_model='virtio', cdrom_bus='scsi')}}
 
 
 custom_specs = {'fedora': {'22': {'x86': dict(video_model='qxl')}}}
@@ -115,6 +121,8 @@ def _get_default_template_mem():
 
 
 def _get_tmpl_defaults():
+    #import pdb
+    #pdb.set_trace()
     """
     ConfigObj returns a dict like below when no changes were made in the
     template configuration file (template.conf)
@@ -136,11 +144,13 @@ def _get_tmpl_defaults():
     tmpl_defaults['main']['networks'] = ['default']
     tmpl_defaults['memory'] = {'current': _get_default_template_mem(),
                                'maxmemory': _get_default_template_mem()}
+    #tmpl_defaults['storage']['disk.0'] = {'size': 10, 'format': 'qcow2',
+                                          #'pool': 'default'}
     tmpl_defaults['storage']['disk.0'] = {'size': 10, 'format': 'qcow2',
                                           'pool': 'default'}
     tmpl_defaults['processor']['vcpus'] = 1
     tmpl_defaults['processor']['maxvcpus'] = 1
-    tmpl_defaults['graphics'] = {'type': 'vnc', 'listen': '127.0.0.1'}
+    #tmpl_defaults['graphics'] = {'type': 'vnc', 'listen': '127.0.0.1'}
 
     default_config = ConfigObj(tmpl_defaults)
 
@@ -155,6 +165,7 @@ def _get_tmpl_defaults():
     # expected by VMTemplate
     defaults = {'domain': 'kvm', 'arch': os.uname()[4],
                 'cdrom_bus': 'ide', 'cdrom_index': 2, 'mouse_bus': 'ps2'}
+    #defaults = {'domain': 'kvm', 'arch': os.uname()[4]}
 
     # Parse main section to get networks and memory values
     defaults.update(default_config.pop('main'))
@@ -169,7 +180,11 @@ def _get_tmpl_defaults():
     for disk in storage_section.keys():
         data = storage_section[disk]
         data['index'] = int(disk.split('.')[1])
-        data['pool'] = {"name": '/plugins/kimchi/storagepools/' +
+        if storage_section[disk].get('path'):
+		data['path'] = storage_section[disk].pop('path')
+                data.pop('pool')
+        else:
+	        data['pool'] = {"name": '/plugins/kimchi/storagepools/' +
                         storage_section[disk].pop('pool')}
         defaults['disks'].append(data)
 
@@ -218,8 +233,9 @@ def lookup(distro, version):
     # set up arch to ppc64 instead of ppc64le due to libvirt compatibility
     if params["arch"] == "ppc64le":
         params["arch"] = "ppc64"
-
-    if distro in modern_version_bases[arch]:
+    #import pdb
+    #pdb.set_trace()
+    if modern_version_bases.get(arch) and distro in modern_version_bases.get(arch):
         if LooseVersion(version) >= LooseVersion(
                 modern_version_bases[arch][distro]):
             params.update(template_specs[arch]['modern'])
@@ -239,5 +255,4 @@ def lookup(distro, version):
         params['icon'] = 'plugins/kimchi/images/icon-%s.png' % distro
     else:
         params['icon'] = 'plugins/kimchi/images/icon-vm.png'
-
     return params

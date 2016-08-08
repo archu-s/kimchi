@@ -445,6 +445,9 @@ lang=en#!/wiki/W51a7ffcf4dfd_4b40_9d82_446ebc23c550/page/PowerLinux\
         self._scan_primary_vol(data)
         if platform.machine().startswith('ppc'):
             self._scan_ppc()
+        elif platform.machine().startswith('s390x'):
+             self.bootable = True
+             return
         else:
             self._scan_el_torito(data)
 

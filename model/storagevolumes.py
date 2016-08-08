@@ -275,10 +275,11 @@ class StorageVolumeModel(object):
         self.task = TaskModel(**kargs)
         self.storagevolumes = StorageVolumesModel(**kargs)
         self.storagepool = StoragePoolModel(**kargs)
-        if self.conn.get() is not None:
-            self.libvirt_user = UserTests().probe_user()
-        else:
-            self.libvirt_user = None
+        #if self.conn.get() is not None:
+        #    self.libvirt_user = UserTests().probe_user()
+        #else:
+        #    self.libvirt_user = None
+        self.libvirt_user = None
 
     @staticmethod
     def get_storagevolume(poolname, name, conn):

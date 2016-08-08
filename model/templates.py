@@ -53,7 +53,8 @@ class TemplatesModel(object):
 
     def create(self, params):
         name = params.get('name', '').strip()
-
+      #  import pdb
+      #  pdb.set_trace()
         conn = self.conn.get()
         for net_name in params.get(u'networks', []):
             try:
@@ -96,14 +97,14 @@ class TemplatesModel(object):
 
             # check search permission
             st_mode = os.stat(path).st_mode
-            if stat.S_ISREG(st_mode) or stat.S_ISBLK(st_mode):
-                user = UserTests().probe_user()
-                run_setfacl_set_attr(path, user=user)
-                ret, excp = probe_file_permission_as_user(path, user)
-                if ret is False:
-                    raise InvalidParameter('KCHISO0008E',
-                                           {'filename': path, 'user': user,
-                                            'err': excp})
+            #if stat.S_ISREG(st_mode) or stat.S_ISBLK(st_mode):
+                #user = UserTests().probe_user()
+                #run_setfacl_set_attr(path, user=user)
+                #ret, excp = probe_file_permission_as_user(path, user)
+                #if ret is False:
+                 #   raise InvalidParameter('KCHISO0008E',
+                  #                         {'filename': path, 'user': user,
+                   #                         'err': excp})
         # disk
         else:
             params["disks"] = params.get('disks', [])
@@ -125,9 +126,11 @@ class TemplatesModel(object):
         # Validate volumes
         for disk in t.info.get('disks'):
             volume = disk.get('volume')
-            # volume can be None
+            #volume can be None
             if 'volume' in disk.keys():
                 self.template_volume_validate(volume, disk['pool'])
+            #validate path
+        
 
         # template with the same name already exists: raise exception
         name = params['name']
@@ -180,7 +183,8 @@ class TemplateModel(object):
     def get_template(name, objstore, conn, overrides=None):
         if overrides is None:
             overrides = {}
-
+        #import pdb
+       # pdb.set_trace()
         with objstore as session:
             params = session.get('template', name)
         if overrides and 'storagepool' in overrides:
